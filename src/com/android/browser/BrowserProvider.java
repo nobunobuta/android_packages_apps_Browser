@@ -17,14 +17,11 @@
 package com.android.browser;
 
 import com.google.android.providers.GoogleSettings.Partner;
-import java.util.Date;
 
-import android.app.ISearchManager;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.ContentUris;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -33,17 +30,16 @@ import android.content.UriMatcher;
 import android.content.SharedPreferences.Editor;
 import android.database.AbstractCursor;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
-import android.os.RemoteException;
-import android.os.ServiceManager;
-import android.os.SystemProperties;
 import android.preference.PreferenceManager;
 import android.provider.Browser;
-import android.util.Log;
 import android.server.search.SearchableInfo;
 import android.text.util.Regex;
+import android.util.Log;
+
+import java.util.Date;
 
 
 public class BrowserProvider extends ContentProvider {
@@ -97,6 +93,7 @@ public class BrowserProvider extends ContentProvider {
     private static final int URI_MATCH_SEARCHES_ID = 11;
     //
     private static final int URI_MATCH_SUGGEST = 20;
+    private static final int URI_MATCH_BOOKMARKS_SUGGEST = 21;
 
     private static final UriMatcher URI_MATCHER;
 
@@ -112,6 +109,9 @@ public class BrowserProvider extends ContentProvider {
                 URI_MATCH_SEARCHES_ID);
         URI_MATCHER.addURI("browser", SearchManager.SUGGEST_URI_PATH_QUERY,
                 URI_MATCH_SUGGEST);
+        URI_MATCHER.addURI("browser",
+                TABLE_NAMES[URI_MATCH_BOOKMARKS] + "/" + SearchManager.SUGGEST_URI_PATH_QUERY,
+                URI_MATCH_BOOKMARKS_SUGGEST);
     }
 
     // 1 -> 2 add cache table
@@ -473,7 +473,7 @@ public class BrowserProvider extends ContentProvider {
             throw new IllegalArgumentException("Unknown URL");
         }
 
-        if (match == URI_MATCH_SUGGEST) {
+        if (match == URI_MATCH_SUGGEST || match == URI_MATCH_BOOKMARKS_SUGGEST) {
             String suggestSelection;
             String [] myArgs;
             if (selectionArgs[0] == null || selectionArgs[0].equals("")) {
@@ -500,49 +500,22 @@ public class BrowserProvider extends ContentProvider {
                     ORDER_BY,
                     (new Integer(MAX_SUGGESTION_LONG_ENTRIES)).toString());
 
-            if (Regex.WEB_URL_PATTERN.matcher(selectionArgs[0]).matches()) {
+            if (match == URI_MATCH_BOOKMARKS_SUGGEST
+                    || Regex.WEB_URL_PATTERN.matcher(selectionArgs[0]).matches()) {
                 return new MySuggestionCursor(c, null, "");
             } else {
                 // get Google suggest if there is still space in the list
                 if (myArgs != null && myArgs.length > 1
                         && c.getCount() < (MAX_SUGGESTION_SHORT_ENTRIES - 1)) {
-                    ISearchManager sm = ISearchManager.Stub
-                            .asInterface(ServiceManager
-                                    .getService(Context.SEARCH_SERVICE));
-                    SearchableInfo si = null;
-                    try {
-                        // use the global search to get Google suggest provider
-                        si = sm.getSearchableInfo(new ComponentName(
-                                getContext(), "com.android.browser"), true);
-
-                        // similar to the getSuggestions() in SearchDialog.java
-                        StringBuilder uriStr = new StringBuilder("content://");
-                        uriStr.append(si.getSuggestAuthority());
-                        // if content path provided, insert it now
-                        final String contentPath = si.getSuggestPath();
-                        if (contentPath != null) {
-                            uriStr.append('/');
-                            uriStr.append(contentPath);
-                        }
-                        // append standard suggestion query path 
-                        uriStr.append('/' + SearchManager.SUGGEST_URI_PATH_QUERY);
-                        // inject query, either as selection args or inline
-                        String[] selArgs = null;
-                        if (si.getSuggestSelection() != null) {
-                            selArgs = new String[] {selectionArgs[0]};
-                        } else {
-                            uriStr.append('/');
-                            uriStr.append(Uri.encode(selectionArgs[0]));
-                        }
-
-                        // finally, make the query
-                        Cursor sc = getContext().getContentResolver().query(
-                                Uri.parse(uriStr.toString()), null,
-                                si.getSuggestSelection(), selArgs, null);
-
-                        return new MySuggestionCursor(c, sc, selectionArgs[0]);
-                    } catch (RemoteException e) {
-                    }
+                    // TODO: This shouldn't be hard-coded. Instead, it should use the
+                    // default web search provider. But the API for that is not implemented yet.
+                    ComponentName googleSearchComponent = 
+                            new ComponentName("com.android.googlesearch", 
+                                    "com.android.googlesearch.GoogleSearch");
+                    SearchableInfo si = 
+                            SearchManager.getSearchableInfo(googleSearchComponent, false);
+                    Cursor sc = SearchManager.getSuggestions(getContext(), si, selectionArgs[0]);
+                    return new MySuggestionCursor(c, sc, selectionArgs[0]);
                 }
                 return new MySuggestionCursor(c, null, selectionArgs[0]);
             }
