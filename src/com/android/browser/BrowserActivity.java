@@ -1965,10 +1965,14 @@ public class BrowserActivity extends Activity
         final Animation.AnimationListener l =
                 new Animation.AnimationListener() {
                     public void onAnimationStart(Animation a) {
-                        mTabOverview.requestFocus();
-                        // Clear the listener so we don't trigger a tab
-                        // selection.
-                        mTabOverview.setListener(null);
+                        // The tab overview could have been dismissed before this method is
+                        // called.
+                        if (mTabOverview != null) {
+                            mTabOverview.requestFocus();
+                            // Clear the listener so we don't trigger a tab
+                            // selection.
+                            mTabOverview.setListener(null);
+                        }
                     }
                     public void onAnimationRepeat(Animation a) {}
                     public void onAnimationEnd(Animation a) {
