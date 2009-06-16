@@ -19,10 +19,12 @@ package com.android.browser;
 import com.google.android.googleapps.IGoogleLoginService;
 import com.google.android.googlelogin.GoogleLoginServiceConstants;
 import com.google.android.providers.GoogleSettings.Partner;
+import com.android.internal.telephony.gsm.stk.AppInterface;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
@@ -161,6 +163,7 @@ public class BrowserActivity extends Activity
     private ServiceConnection mGlsConnection = null;
 
     private SensorManager mSensorManager = null;
+    final static int EXIT_CONFIRMATION_DIALOG = 1;
 
     /* Whitelisted webpages
     private static HashSet<String> sWhiteList;
@@ -1348,6 +1351,30 @@ public class BrowserActivity extends Activity
         super.startSearch(initialQuery, selectInitialQuery, appSearchData, globalSearch);
     }
 
+    public  DialogInterface.OnClickListener mExitDialogListener =
+       new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int button) {
+             finish();
+             Intent StkIntent = new Intent(AppInterface.STK_TERMINATE_ACTION);
+             sendBroadcast(StkIntent);
+          }
+       };
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+          switch (id) {
+             case EXIT_CONFIRMATION_DIALOG:
+                  return new AlertDialog.Builder(BrowserActivity.this)
+                   .setTitle(R.string.exitConfirmation_title)
+                   .setMessage(R.string.exitConfirmation)
+                   .setNegativeButton(android.R.string.cancel, null)
+                   .setPositiveButton(android.R.string.ok, mExitDialogListener)
+                   .setCancelable(false)
+                   .create();
+          }
+          return super.onCreateDialog(id);
+       }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (!mCanChord) {
@@ -1361,6 +1388,18 @@ public class BrowserActivity extends Activity
                 String url = getTopWindow().getUrl();
                 startSearch(mSettings.getHomePage().equals(url) ? null : url, true,
                         createGoogleSearchSourceBundle(GOOGLE_SEARCH_SOURCE_GOTO), false);
+                }
+                break;
+
+            case R.id.exit_menu_id: {
+                if (mTabControl.getTabCount() > 1) {
+                   showDialog(EXIT_CONFIRMATION_DIALOG);
+                }
+                else {
+                 finish();
+                 Intent StkIntent = new Intent(AppInterface.STK_TERMINATE_ACTION);
+                 sendBroadcast(StkIntent);
+                }
                 }
                 break;
 
