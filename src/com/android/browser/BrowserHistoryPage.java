@@ -379,6 +379,10 @@ public class BrowserHistoryPage extends ExpandableListActivity {
             for (int i = 0; i < groupPosition; i++) {
                 index += mItemMap[i];
             }
+            // Check for the cursor. if closed then return null
+            if(mCursor.isClosed()) {
+               return null;
+            }
             mCursor.moveToPosition(index);
             item.setName(mCursor.getString(Browser.HISTORY_PROJECTION_TITLE_INDEX));
             String url = mCursor.getString(Browser.HISTORY_PROJECTION_URL_INDEX);
