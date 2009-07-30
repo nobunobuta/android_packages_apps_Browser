@@ -381,10 +381,10 @@ class BrowserBookmarksAdapter extends BaseAdapter {
         mCursor.registerDataSetObserver(mDataSetObserver);
         mBookmarksPage.startManagingCursor(mCursor);
 
+        mCount = mCursor.getCount() + mExtraOffset;
+
         mDataValid = true;
         notifyDataSetChanged();
-
-        mCount = mCursor.getCount() + mExtraOffset;
     }
 
     /**
