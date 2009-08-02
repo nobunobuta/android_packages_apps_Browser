@@ -28,19 +28,27 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriMatcher;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.AbstractCursor;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Browser;
+import android.provider.Settings;
 import android.server.search.SearchableInfo;
 import android.text.TextUtils;
 import android.text.util.Regex;
 import android.util.Log;
+import android.util.TypedValue;
 
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class BrowserProvider extends ContentProvider {
@@ -59,9 +67,10 @@ public class BrowserProvider extends ContentProvider {
     private static final String[] SUGGEST_PROJECTION = new String[] {
             "_id", "url", "title", "bookmark"
     };
-    private static final String SUGGEST_SELECTION = 
-            "url LIKE ? OR url LIKE ? OR url LIKE ? OR url LIKE ?";
-    private String[] SUGGEST_ARGS = new String[4];
+    private static final String SUGGEST_SELECTION =
+            "url LIKE ? OR url LIKE ? OR url LIKE ? OR url LIKE ?"
+                + " OR title LIKE ?";
+    private String[] SUGGEST_ARGS = new String[5];
 
     // shared suggestion array index, make sure to match COLUMNS
     private static final int SUGGEST_COLUMN_INTENT_ACTION_ID = 1;
@@ -136,15 +145,27 @@ public class BrowserProvider extends ContentProvider {
     // 18 -> 19 Remove labels table
     private static final int DATABASE_VERSION = 19;
 
+    // Regular expression which matches http://, followed by some stuff, followed by
+    // optionally a trailing slash, all matched as separate groups.
+    private static final Pattern STRIP_URL_PATTERN = Pattern.compile("^(http://)(.*?)(/$)?");
+
+    private SearchManager mSearchManager;
+
+    // The hex color string to be applied to urls of website suggestions, as derived from
+    // the current theme. This is not set until/unless beautifyUrl is called, at which point
+    // this variable caches the color value.
+    private static String mSearchUrlColorHex;
+
     public BrowserProvider() {
     }
-  
+
 
     private static CharSequence replaceSystemPropertyInString(Context context, CharSequence srcString) {
         StringBuffer sb = new StringBuffer();
         int lastCharLoc = 0;
-        
-        final String client_id = Partner.getString(context.getContentResolver(), Partner.CLIENT_ID);
+
+        final String client_id = Partner.getString(context.getContentResolver(),
+                                                    Partner.CLIENT_ID, "android-google");
 
         for (int i = 0; i < srcString.length(); ++i) {
             char c = srcString.charAt(i);
@@ -205,7 +226,7 @@ public class BrowserProvider extends ContentProvider {
                     CharSequence bookmarkDestination = replaceSystemPropertyInString(mContext, bookmarks[i + 1]);
                     db.execSQL("INSERT INTO bookmarks (title, url, visits, " +
                             "date, created, bookmark)" + " VALUES('" +
-                            bookmarks[i] + "', '" + bookmarkDestination + 
+                            bookmarks[i] + "', '" + bookmarkDestination +
                             "', 0, 0, 0, 1);");
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
@@ -236,7 +257,7 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         final Context context = getContext();
         mOpenHelper = new DatabaseHelper(context);
-        // we added "picasa web album" into default bookmarks for version 19. 
+        // we added "picasa web album" into default bookmarks for version 19.
         // To avoid erasing the bookmark table, we added it explicitly for
         // version 18 and 19 as in the other cases, we will erase the table.
         if (DATABASE_VERSION == 18 || DATABASE_VERSION == 19) {
@@ -250,7 +271,64 @@ public class BrowserProvider extends ContentProvider {
                 ed.commit();
             }
         }
+        mSearchManager = (SearchManager) context.getSystemService(Context.SEARCH_SERVICE);
+        mShowWebSuggestionsSettingChangeObserver
+            = new ShowWebSuggestionsSettingChangeObserver();
+        context.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(
+                        Settings.System.SHOW_WEB_SUGGESTIONS),
+                true, mShowWebSuggestionsSettingChangeObserver);
+        updateShowWebSuggestions();
         return true;
+    }
+
+    /**
+     * This Observer will ensure that if the user changes the system
+     * setting of whether to display web suggestions, we will
+     * change accordingly.
+     */
+    /* package */ class ShowWebSuggestionsSettingChangeObserver
+            extends ContentObserver {
+        public ShowWebSuggestionsSettingChangeObserver() {
+            super(new Handler());
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            updateShowWebSuggestions();
+        }
+    }
+
+    private ShowWebSuggestionsSettingChangeObserver
+            mShowWebSuggestionsSettingChangeObserver;
+
+    // If non-null, then the system is set to show web suggestions,
+    // and this is the SearchableInfo to use to get them.
+    private SearchableInfo mSearchableInfo;
+
+    /**
+     * Check the system settings to see whether web suggestions are
+     * allowed.  If so, store the SearchableInfo to grab suggestions
+     * while the user is typing.
+     */
+    private void updateShowWebSuggestions() {
+        mSearchableInfo = null;
+        Context context = getContext();
+        if (Settings.System.getInt(context.getContentResolver(),
+                Settings.System.SHOW_WEB_SUGGESTIONS,
+                1 /* default on */) == 1) {
+            Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            ResolveInfo info = context.getPackageManager().resolveActivity(
+                    intent, PackageManager.MATCH_DEFAULT_ONLY);
+            if (info != null) {
+                ComponentName googleSearchComponent =
+                        new ComponentName(info.activityInfo.packageName,
+                                info.activityInfo.name);
+                mSearchableInfo = mSearchManager.getSearchableInfo(
+                        googleSearchComponent, false);
+            }
+        }
     }
 
     private void fixPicasaBookmark() {
@@ -277,9 +355,9 @@ public class BrowserProvider extends ContentProvider {
      * Subclass AbstractCursor so we can combine multiple Cursors and add
      * "Google Search".
      * Here are the rules.
-     * 1. We only have MAX_SUGGESTION_LONG_ENTRIES in the list plus 
+     * 1. We only have MAX_SUGGESTION_LONG_ENTRIES in the list plus
      *      "Google Search";
-     * 2. If bookmark/history entries are less than 
+     * 2. If bookmark/history entries are less than
      *      (MAX_SUGGESTION_SHORT_ENTRIES -1), we include Google suggest.
      */
     private class MySuggestionCursor extends AbstractCursor {
@@ -289,6 +367,9 @@ public class BrowserProvider extends ContentProvider {
         private int     mSuggestionCount;
         private boolean mBeyondCursor;
         private String  mString;
+        private int     mSuggestText1Id;
+        private int     mSuggestText2Id;
+        private int     mSuggestQueryId;
 
         public MySuggestionCursor(Cursor hc, Cursor sc, String string) {
             mHistoryCursor = hc;
@@ -300,6 +381,22 @@ public class BrowserProvider extends ContentProvider {
             }
             mString = string;
             mBeyondCursor = false;
+
+            // Some web suggest providers only give suggestions and have no description string for
+            // items. The order of the result columns may be different as well. So retrieve the
+            // column indices for the fields we need now and check before using below.
+            if (mSuggestCursor == null) {
+                mSuggestText1Id = -1;
+                mSuggestText2Id = -1;
+                mSuggestQueryId = -1;
+            } else {
+                mSuggestText1Id = mSuggestCursor.getColumnIndex(
+                                SearchManager.SUGGEST_COLUMN_TEXT_1);
+                mSuggestText2Id = mSuggestCursor.getColumnIndex(
+                                SearchManager.SUGGEST_COLUMN_TEXT_2);
+                mSuggestQueryId = mSuggestCursor.getColumnIndex(
+                                SearchManager.SUGGEST_COLUMN_QUERY);
+            }
         }
 
         @Override
@@ -332,7 +429,7 @@ public class BrowserProvider extends ContentProvider {
         public String[] getColumnNames() {
             return COLUMNS;
         }
-        
+
         @Override
         public String getString(int columnIndex) {
             if ((mPos != -1 && mHistoryCursor != null)) {
@@ -355,7 +452,8 @@ public class BrowserProvider extends ContentProvider {
                         if (mHistoryCount > mPos) {
                             return getHistoryTitle();
                         } else if (!mBeyondCursor) {
-                            return mSuggestCursor.getString(1);
+                            if (mSuggestText1Id == -1) return null;
+                            return mSuggestCursor.getString(mSuggestText1Id);
                         } else {
                             return mString;
                         }
@@ -364,7 +462,8 @@ public class BrowserProvider extends ContentProvider {
                         if (mHistoryCount > mPos) {
                             return getHistorySubtitle();
                         } else if (!mBeyondCursor) {
-                            return mSuggestCursor.getString(2);
+                            if (mSuggestText2Id == -1) return null;
+                            return mSuggestCursor.getString(mSuggestText2Id);
                         } else {
                             return getContext().getString(R.string.search_the_web);
                         }
@@ -391,13 +490,18 @@ public class BrowserProvider extends ContentProvider {
 
                     case SUGGEST_COLUMN_QUERY_ID:
                         if (mHistoryCount > mPos) {
-                            return null;
+                            // Return the url in the intent query column. This is ignored
+                            // within the browser because our searchable is set to
+                            // android:searchMode="queryRewriteFromData", but it is used by
+                            // global search for query rewriting.
+                            return mHistoryCursor.getString(1);
                         } else if (!mBeyondCursor) {
-                            return mSuggestCursor.getString(3);
+                            if (mSuggestQueryId == -1) return null;
+                            return mSuggestCursor.getString(mSuggestQueryId);
                         } else {
                             return mString;
                         }
-                        
+
                     case SUGGEST_COLUMN_FORMAT:
                         return "html";
                 }
@@ -466,11 +570,11 @@ public class BrowserProvider extends ContentProvider {
                 mSuggestCursor = null;
             }
         }
-        
+
         /**
          * Provides the title (text line 1) for a browser suggestion, which should be the
          * webpage title. If the webpage title is empty, returns the stripped url instead.
-         * 
+         *
          * @return the title string to use
          */
         private String getHistoryTitle() {
@@ -480,12 +584,12 @@ public class BrowserProvider extends ContentProvider {
             }
             return title;
         }
-        
+
         /**
          * Provides the subtitle (text line 2) for a browser suggestion, which should be the
          * webpage url. If the webpage title is empty, then the url should go in the title
          * instead, and the subtitle should be empty, so this would return null.
-         * 
+         *
          * @return the subtitle string to use, or null if none
          */
         private String getHistorySubtitle() {
@@ -496,21 +600,31 @@ public class BrowserProvider extends ContentProvider {
                 return beautifyUrl(mHistoryCursor.getString(1 /* url */));
             }
         }
-        
+
         /**
-         * Strips "http://" from the beginning of a url and adds html formatting to make it green.
+         * Strips "http://" from the beginning of a url and "/" from the end,
+         * and adds html formatting to make it green.
          */
         private String beautifyUrl(String url) {
-            if (url.startsWith("http://")) {
-                url = url.substring(7);
+            if (mSearchUrlColorHex == null) {
+                // Get the color used for this purpose from the current theme.
+                TypedValue colorValue = new TypedValue();
+                getContext().getTheme().resolveAttribute(
+                        com.android.internal.R.attr.textColorSearchUrl, colorValue, true);
+                int color = getContext().getResources().getColor(colorValue.resourceId);
+
+                // Convert the int color value into a hex string, and strip the first two
+                // characters which will be the alpha transparency (html doesn't want this).
+                mSearchUrlColorHex = Integer.toHexString(color).substring(2);
             }
-            return "<font color=\"green\">" + url + "</font>";
+
+            return "<font color=\"#" + mSearchUrlColorHex + "\">" + stripUrl(url) + "</font>";
         }
     }
 
     @Override
     public Cursor query(Uri url, String[] projectionIn, String selection,
-            String[] selectionArgs, String sortOrder) 
+            String[] selectionArgs, String sortOrder)
             throws IllegalStateException {
         SQLiteDatabase db = mOpenHelper.getReadableDatabase();
 
@@ -536,6 +650,8 @@ public class BrowserProvider extends ContentProvider {
                     SUGGEST_ARGS[1] = "http://www." + like;
                     SUGGEST_ARGS[2] = "https://" + like;
                     SUGGEST_ARGS[3] = "https://www." + like;
+                    // To match against titles.
+                    SUGGEST_ARGS[4] = like;
                     myArgs = SUGGEST_ARGS;
                     suggestSelection = SUGGEST_SELECTION;
                 }
@@ -552,15 +668,9 @@ public class BrowserProvider extends ContentProvider {
             } else {
                 // get Google suggest if there is still space in the list
                 if (myArgs != null && myArgs.length > 1
+                        && mSearchableInfo != null
                         && c.getCount() < (MAX_SUGGESTION_SHORT_ENTRIES - 1)) {
-                    // TODO: This shouldn't be hard-coded. Instead, it should use the
-                    // default web search provider. But the API for that is not implemented yet.
-                    ComponentName googleSearchComponent = 
-                            new ComponentName("com.android.googlesearch", 
-                                    "com.android.googlesearch.GoogleSearch");
-                    SearchableInfo si = 
-                            SearchManager.getSearchableInfo(googleSearchComponent, false);
-                    Cursor sc = SearchManager.getSuggestions(getContext(), si, selectionArgs[0]);
+                    Cursor sc = mSearchManager.getSuggestions(mSearchableInfo, selectionArgs[0]);
                     return new MySuggestionCursor(c, sc, selectionArgs[0]);
                 }
                 return new MySuggestionCursor(c, null, selectionArgs[0]);
@@ -713,4 +823,26 @@ public class BrowserProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(url, null);
         return ret;
     }
+
+    /**
+     * Strips the provided url of preceding "http://" and any trailing "/". Does not
+     * strip "https://". If the provided string cannot be stripped, the original string
+     * is returned.
+     *
+     * TODO: Put this in TextUtils to be used by other packages doing something similar.
+     *
+     * @param url a url to strip, like "http://www.google.com/"
+     * @return a stripped url like "www.google.com", or the original string if it could
+     *         not be stripped
+     */
+    private static String stripUrl(String url) {
+        if (url == null) return null;
+        Matcher m = STRIP_URL_PATTERN.matcher(url);
+        if (m.matches() && m.groupCount() == 3) {
+            return m.group(2);
+        } else {
+            return url;
+        }
+    }
+
 }
