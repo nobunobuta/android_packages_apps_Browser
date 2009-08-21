@@ -1704,7 +1704,16 @@ public class BrowserActivity extends Activity
                     }
                 }
                 break;
-
+            case R.id.email_context_menu_id:
+                {
+                    try {
+                        startActivity(item.getIntent());
+                    } catch (ActivityNotFoundException ex) {
+                        if (LOGD_ENABLED) {
+                            Log.d(LOGTAG, "activity not found for " + item.getIntent());
+                        }
+                    }
+                }
             default:
                 if (!super.onOptionsItemSelected(item)) {
                     return false;
