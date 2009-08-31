@@ -848,7 +848,8 @@ class TabControl {
         WebView w = new WebView(mActivity);
         w.setMapTrackballToArrowKeys(false); // use trackball directly
         // Enable the built-in zoom
-        w.getSettings().setBuiltInZoomControls(true);
+        //w.getSettings().setBuiltInZoomControls(false);
+
         // Add this WebView to the settings observer list and update the
         // settings
         final BrowserSettings s = BrowserSettings.getInstance();

@@ -85,6 +85,7 @@ import android.text.format.DateFormat;
 import android.text.util.Regex;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -164,6 +165,7 @@ public class BrowserActivity extends Activity
 
     private SensorManager mSensorManager = null;
     private MultiTouchController mMultiTouchController;
+    private GestureDetector mGestureDetector;
 
     // These are single-character shortcuts for searching popular sources.
     private static final int SHORTCUT_INVALID = 0;
@@ -645,6 +647,18 @@ public class BrowserActivity extends Activity
             Log.v(LOGTAG, this + " onStart");
         }
         super.onCreate(icicle);
+        
+        // Keep a settings instance handy.
+        mSettings = BrowserSettings.getInstance();
+        mSettings.setTabControl(mTabControl);
+        mSettings.loadFromDb(this);
+
+        if (mSettings.fullScreen())
+        {
+        	getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+        			WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+        }
+        
         this.requestWindowFeature(Window.FEATURE_LEFT_ICON);
         this.requestWindowFeature(Window.FEATURE_RIGHT_ICON);
         this.requestWindowFeature(Window.FEATURE_PROGRESS);
@@ -682,11 +696,6 @@ public class BrowserActivity extends Activity
 
         // Open the icon database and retain all the bookmark urls for favicons
         retainIconsOnStartup();
-
-        // Keep a settings instance handy.
-        mSettings = BrowserSettings.getInstance();
-        mSettings.setTabControl(mTabControl);
-        mSettings.loadFromDb(this);
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Browser");
@@ -772,6 +781,7 @@ public class BrowserActivity extends Activity
             attachTabToContentView(mTabControl.getCurrentTab());
         }
         mMultiTouchController = new MultiTouchController(this, getResources(), false);
+        mGestureDetector = new GestureDetector(this, new LearnGestureListener());
     }
 
     @Override
@@ -1274,6 +1284,12 @@ public class BrowserActivity extends Activity
     }
 
     private boolean resumeWebView() {
+    	if (mSettings.lockLandscape()) {
+    		this.setRequestedOrientation(0); // lock in landscape
+    	} else {
+    		this.setRequestedOrientation(4); // orient by sensor
+    	}
+   
         if ((!mActivityInPause && !mPageStarted) ||
                 (mActivityInPause && mPageStarted)) {
             CookieSyncManager.getInstance().startSync();
@@ -1382,11 +1398,40 @@ public class BrowserActivity extends Activity
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser, menu);
+        originalMenu = menu;
+
         mMenu = menu;
         updateInLoadMenuItems();
+        
+        // if onscreen zoom controls are enabled, we can kill the zoom controls
+        if ( (mSettings.onscreenZoomEnabled()) || (!(mSettings.menuZoomEnabled())) ) {
+        	killZoomMenuItems();    
+        }
         return true;
     }
 
+    protected void killZoomMenuItems() {
+    	// pull them in to our local vars first
+    	mMenu.removeItem(R.id.zoom_out_menu_id);
+    	mMenu.removeItem(R.id.zoom_in_menu_id);
+    }
+    
+    protected void addZoomMenuItems() {
+    	if (mSettings.menuZoomEnabled()) {
+    		mMenu.clear();
+    		MenuInflater inflater = getMenuInflater();
+    		inflater.inflate(R.menu.browser, mMenu);
+    		mMenu.setGroupVisible(R.id.MAIN_MENU, true);
+    		mMenu.setGroupEnabled(R.id.MAIN_MENU, true);
+    		mMenu.setGroupEnabled(R.id.MAIN_SHORTCUT_MENU, true);
+    		mMenu.setGroupVisible(R.id.TAB_MENU, false);
+    		mMenu.setGroupEnabled(R.id.TAB_MENU, false);
+    		updateInLoadMenuItems();
+    	} else {
+    		killZoomMenuItems();
+    	}
+    }
+    
     /**
      * As the menu can be open when loading state changes
      * we must manually update the state of the stop/reload menu
@@ -1700,6 +1745,9 @@ public class BrowserActivity extends Activity
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+    	if (mGestureDetector.onTouchEvent(event)) {
+    		return true;
+    	}
         if (mMultiTouchController.onTouchEvent(event)) {
 	    // Handling a multitouch scale operation.
             // Need to send a cancel event to reset the WebView state, in case
@@ -2716,6 +2764,14 @@ public class BrowserActivity extends Activity
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             mMenuIsDown = true;
         } else if (mMenuIsDown) {
+        	// PN: now sort out menu options
+        	if (mMenu != null) {
+        		if (mSettings.onscreenZoomEnabled()) {
+        			killZoomMenuItems();
+        		} else {
+        			addZoomMenuItems();
+        		}
+        	}
             // The default key mode is DEFAULT_KEYS_SEARCH_LOCAL. As the MENU is
             // still down, we don't want to trigger the search. Pretend to
             // consume the key and do nothing.
@@ -4750,6 +4806,9 @@ public class BrowserActivity extends Activity
     private int mMenuState = R.id.MAIN_MENU;
     private static final int EMPTY_MENU = -1;
     private Menu mMenu;
+    private Menu originalMenu;
+    private MenuItem zoomOutItem;
+    private MenuItem zoomInItem;
 
     private FindDialog mFindDialog;
     // Used to prevent chording to result in firing two shortcuts immediately
@@ -4896,6 +4955,33 @@ public class BrowserActivity extends Activity
     // the frenquency of checking whether system memory is low
     final static int CHECK_MEMORY_INTERVAL = 30000;     // 30 seconds
 
+    class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
+    	
+		@Override
+		public boolean onDoubleTap(MotionEvent ev) {
+			TabControl.Tab currentTab = mTabControl.getCurrentTab();
+			WebView webView = currentTab.getWebView();
+			Log.d("PN", "getScale pre: " + webView.getScale());
+			if (webView.getScale() < 1) {
+				while (webView.getScale() < 1) {
+					webView.zoomIn();
+				}
+				return true;
+			}
+
+			// at zoom level 1 just do single hops
+			if (webView.getScale() <= 1.5) {
+				webView.zoomIn();
+				return true;
+			} else { // until it's more than 150% view, so we zoom out to 0.7
+				while (webView.getScale() > 0.7) {
+					webView.zoomOut();
+				}
+				return true;
+			}
+		}
+    }
+    
     /**
      * A UrlData class to abstract how the content will be set to WebView.
      * This base class uses loadUrl to show the content.

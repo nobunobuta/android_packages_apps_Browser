@@ -179,6 +179,9 @@
     <!-- Menu item that opens up a dialog which allows the user to provide a
             string and search for it on the page. -->
     <string name="find_dot">Find on page</string>
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    
     <!-- Menu item to switch to text selection mode for copy and paste. -->
     <string name="select_dot">Select text</string>
     <!-- Menu item which opens a screen which shows all the currently open
@@ -344,6 +347,12 @@
         <item>Large</item>
         <item>Huge</item>
     </string-array>
+    <string-array name="pref_user_agent">
+    	<item>Android</item>
+    	<item>iPhone</item>
+    	<item>Desktop</item>
+    </string-array>
+    
     <!-- Title of dialog for setting the text size -->
     <string name="pref_text_size_dialogtitle">Text size</string>
     <!-- Do not translate -->

@@ -29,7 +29,7 @@ import android.webkit.WebIconDatabase;
 import android.webkit.WebSettings;
 import android.preference.PreferenceManager;
 import android.provider.Browser;
-
+import android.util.Log;
 import java.util.HashMap;
 import java.util.Observable;
 
@@ -66,6 +66,11 @@ class BrowserSettings extends Observable {
     private boolean loginInitialized = false;
     private boolean autoFitPage = true;
     private boolean showDebugSettings = false;
+    private boolean onscreenZoom = false;
+    private boolean menuZoom = true;
+    private String mobileVersion = "Android";
+    private boolean lockLandscape = false;
+    private boolean fullScreen = false;
 
     // Development settings
     public WebSettings.LayoutAlgorithm layoutAlgorithm =
@@ -144,6 +149,16 @@ class BrowserSettings extends Observable {
             BrowserSettings b = (BrowserSettings)o;
             WebSettings s = mSettings;
 
+			if (b.mobileVersion.equals("Android")) {
+				b.userAgent = 0; // mobile
+			}
+			if (b.mobileVersion.equals("Desktop")) {
+				b.userAgent = 1; // desktop
+			}
+			if (b.mobileVersion.equals("iPhone")) {
+				b.userAgent = 2; // iphone
+			}
+
             s.setLayoutAlgorithm(b.layoutAlgorithm);
             if (b.userAgent == 0) {
                 // use the default ua string
@@ -171,7 +186,8 @@ class BrowserSettings extends Observable {
             s.setLightTouchEnabled(b.lightTouch);
             s.setSaveFormData(b.saveFormData);
             s.setSavePassword(b.rememberPasswords);
-
+            s.setBuiltInZoomControls(b.onscreenZoom);
+            
             // WebView inside Browser doesn't want initial focus to be set.
             s.setNeedInitialFocus(false);
             // Browser supports multiple windows
@@ -214,6 +230,11 @@ class BrowserSettings extends Observable {
 
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
+        onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
+        lockLandscape = p.getBoolean("lock_landscape",lockLandscape);
+        fullScreen = p.getBoolean("full_screen",fullScreen);
+        menuZoom = p.getBoolean("menu_zoom",menuZoom);
+
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
         pluginsEnabled = p.getBoolean("enable_plugins",
@@ -247,6 +268,17 @@ class BrowserSettings extends Observable {
         defaultTextEncodingName =
                 p.getString(PREF_DEFAULT_TEXT_ENCODING,
                         defaultTextEncodingName);
+        mobileVersion = p.getString("mobile_webpn2",mobileVersion);
+
+		if (mobileVersion.equals("Android")) {
+			userAgent = 0; // mobile
+		}
+		if (mobileVersion.equals("Desktop")) {
+			userAgent = 1; // desktop
+		}
+		if (mobileVersion.equals("iPhone")) {
+			userAgent = 2; // iphone
+		}
 
         showDebugSettings =
                 p.getBoolean(PREF_DEBUG_SETTINGS, showDebugSettings);
@@ -292,6 +324,22 @@ class BrowserSettings extends Observable {
         ed.commit();
         homeUrl = url;
     }
+
+	public boolean onscreenZoomEnabled() {
+		return onscreenZoom;
+	}
+
+	public boolean fullScreen() {
+		return fullScreen;
+	}
+
+	public boolean menuZoomEnabled() {
+		return menuZoom;
+	}
+
+	public boolean lockLandscape() {
+		return lockLandscape;
+	}
 
     public boolean isLoginInitialized() {
         return loginInitialized;
