@@ -66,8 +66,8 @@ class BrowserSettings extends Observable {
     private boolean loginInitialized = false;
     private boolean autoFitPage = true;
     private boolean showDebugSettings = false;
-    private boolean onscreenZoom = false;
-    private boolean menuZoom = true;
+    private boolean onscreenZoom = true;
+    private boolean menuZoom = false;
     private String mobileVersion = "Android";
     private boolean lockLandscape = false;
     private boolean fullScreen = false;
