@@ -5043,33 +5043,6 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
     // the frenquency of checking whether system memory is low
     final static int CHECK_MEMORY_INTERVAL = 30000;     // 30 seconds
 
-    class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
-    	
-		@Override
-		public boolean onDoubleTap(MotionEvent ev) {
-			TabControl.Tab currentTab = mTabControl.getCurrentTab();
-			WebView webView = currentTab.getWebView();
-			Log.d("PN", "getScale pre: " + webView.getScale());
-			if (webView.getScale() < 1) {
-				while (webView.getScale() < 1) {
-					webView.zoomIn();
-				}
-				return true;
-			}
-
-			// at zoom level 1 just do single hops
-			if (webView.getScale() <= 1.5) {
-				webView.zoomIn();
-				return true;
-			} else { // until it's more than 150% view, so we zoom out to 0.7
-				while (webView.getScale() > 0.7) {
-					webView.zoomOut();
-				}
-				return true;
-			}
-		}
-    }
-    
     /**
      * A UrlData class to abstract how the content will be set to WebView.
      * This base class uses loadUrl to show the content.
