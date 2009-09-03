@@ -64,6 +64,7 @@ import android.net.http.SslCertificate;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
@@ -173,6 +174,8 @@ public class BrowserActivity extends Activity
     private static final int SHORTCUT_WIKIPEDIA_SEARCH = 2;
     private static final int SHORTCUT_DICTIONARY_SEARCH = 3;
     private static final int SHORTCUT_GOOGLE_MOBILE_LOCAL_SEARCH = 4;
+    private boolean singleTapDetected = false;
+    private boolean tripleTapDetected = false;
 
     /* Whitelisted webpages
     private static HashSet<String> sWhiteList;
@@ -1287,7 +1290,7 @@ public class BrowserActivity extends Activity
     	if (mSettings.lockLandscape()) {
     		this.setRequestedOrientation(0); // lock in landscape
     	} else {
-    		this.setRequestedOrientation(4); // orient by sensor
+    		this.setRequestedOrientation(-14); // orient by user setting in OS
     	}
    
         if ((!mActivityInPause && !mPageStarted) ||
@@ -4918,6 +4921,91 @@ public class BrowserActivity extends Activity
     final static String GOOGLE_SEARCH_SOURCE_SUGGEST = "browser-suggest";
     // "source" parameter for Google search from unknown source
     final static String GOOGLE_SEARCH_SOURCE_UNKNOWN = "unknown";
+
+class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
+    @Override
+    public boolean onSingleTapUp(MotionEvent ev) {
+	singleTapDetected = true;
+        return super.onSingleTapUp(ev);
+    }
+/*    @Override
+    public void onShowPress(MotionEvent ev) {
+        Log.d("onShowPress",ev.toString());
+    }
+    @Override
+    public void onLongPress(MotionEvent ev) {
+        Log.d("onLongPress",ev.toString());
+    }
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        Log.d("onScroll",e1.toString());
+        return true;
+    }
+    @Override
+    public boolean onDown(MotionEvent ev) {
+        Log.d("onDownd",ev.toString());
+        return true;
+    }
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Log.d("d",e1.toString());
+        Log.d("e2",e2.toString());
+        return true;
+    }
+    @Override */
+    public boolean onDoubleTap(MotionEvent ev)
+    {
+	singleTapDetected = false;
+	Log.d("PN","double tap. Woot");
+	
+	new CountDownTimer(250, 50) {
+		public void onTick(long millisUntilFinished) { /* do nothing */ }
+		public void onFinish() 
+		{
+			
+			TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        		WebView webView = currentTab.getWebView();			
+
+  			if (singleTapDetected) // tripletap!
+			{
+				Log.d("PN","triple tap! Double-woot");
+				singleTapDetected = false;
+				tripleTapDetected = true;
+				webView.zoomOut();
+			}
+			else // doubletap
+			{
+				Log.d("PN","getScale pre: "+webView.getScale());
+				if (webView.getScale() < 1)
+				{
+					while (webView.getScale() < 0.76)
+					{
+						webView.zoomIn();
+					}
+				}
+				// at zoom level 1 just do single hops 
+				if (webView.getScale() <= 1.4)
+				{
+					webView.zoomIn();
+				}
+				else
+				{	// until it's more than 150% view, so we zoom out to 0.7
+					while (webView.getScale() > 0.5)
+					{			
+						// a quick kludge to make sure we don't get into an infinite loop
+						// on pages that won't zoom lower than 1 
+						if(!(webView.zoomOut())) { /* do nothing, just keep zooming */ }
+					}
+				}
+
+			}
+   		}
+  	}.start();
+
+	return true;
+    }
+}
+
 
     private final static String LOGTAG = "browser";
 
