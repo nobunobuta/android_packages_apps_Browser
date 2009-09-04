@@ -4923,9 +4923,31 @@ public class BrowserActivity extends Activity
     final static String GOOGLE_SEARCH_SOURCE_UNKNOWN = "unknown";
 
 class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
+    
     @Override
     public boolean onSingleTapUp(MotionEvent ev) {
 	singleTapDetected = true;
+	
+	if ((ev.getY() < 20) && (ev.getX() < 30)) // top left click
+	{
+                TabControl.Tab current = mTabControl.getCurrentTab();
+                if (current != null) {
+                    dismissSubWindow(current);
+                    current.getWebView().loadUrl(mSettings.getHomePage());
+                }
+		return true;
+	}
+
+	if ((ev.getY() < 20) && (ev.getX() > 30)) // top (title bar) click
+	{	
+		String url = getTopWindow().getUrl();
+                startSearch(mSettings.getHomePage().equals(url) ? null : url, true,
+                        createGoogleSearchSourceBundle(GOOGLE_SEARCH_SOURCE_GOTO), false);
+		singleTapDetected = false;
+		return true; // DON'T run the original
+	}
+	
+	
         return super.onSingleTapUp(ev);
     }
 /*    @Override
@@ -4958,7 +4980,7 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 	singleTapDetected = false;
 	Log.d("PN","double tap. Woot");
 	
-	new CountDownTimer(500, 50) {
+	new CountDownTimer(mSettings.tripleTapDelay(), 50) {
 		public void onTick(long millisUntilFinished) { /* do nothing */ }
 		public void onFinish() 
 		{
@@ -4975,11 +4997,15 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 			}
 			else // doubletap
 			{
+			   if (mSettings.doubleTapAction() == 0) // doubletap cycle
+			   {
 				Log.d("PN","getScale pre: "+webView.getScale());
-				if (webView.getScale() < 1)
+				if (webView.getScale() < 0.72)
 				{
-					while (webView.getScale() < 0.76)
+					float currentScale = 99;
+					while ((webView.getScale() < 0.6) && (currentScale != webView.getScale()))
 					{
+						currentScale = webView.getScale();
 						webView.zoomIn();
 					}
 				}
@@ -4989,14 +5015,20 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 					webView.zoomIn();
 				}
 				else
-				{	// until it's more than 150% view, so we zoom out to 0.7
-					while (webView.getScale() > 0.5)
+				{	// until it's more than 150% view, so we zoom out until we can't zoom
+					// any more
+					float currentScale = 99;
+					while (currentScale != webView.getScale())
 					{			
-						// a quick kludge to make sure we don't get into an infinite loop
-						// on pages that won't zoom lower than 1 
-						if(!(webView.zoomOut())) { /* do nothing, just keep zooming */ }
+						currentScale = webView.getScale();
+						webView.zoomOut();
 					}
 				}
+			    }
+			    else // doubletap just simple zoom in, nothing else
+			    {
+				webView.zoomIn();
+			    }
 
 			}
    		}

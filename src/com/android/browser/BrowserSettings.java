@@ -53,6 +53,8 @@ class BrowserSettings extends Observable {
     // until the performance of PreferenceManager.setDefaultValues()
     // is improved.
     private boolean loadsImagesAutomatically = true;
+    private String tripleTapDelay = "500ms";
+    private String doubleTapAction = "Zoom cycle";
     private boolean javaScriptEnabled = true;
     private boolean pluginsEnabled = true;
     private String pluginsPath;  // default value set in loadFromDb().
@@ -228,6 +230,8 @@ class BrowserSettings extends Observable {
         homeUrl =
             p.getString(PREF_HOMEPAGE, homeUrl);
 
+	tripleTapDelay = p.getString("triple_tap_delay", tripleTapDelay);
+	doubleTapAction = p.getString("double_tap_action",doubleTapAction);
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
         onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
@@ -329,9 +333,34 @@ class BrowserSettings extends Observable {
 		return onscreenZoom;
 	}
 
-	public boolean fullScreen() {
-		return fullScreen;
+    public int tripleTapDelay() {
+	if (tripleTapDelay.equals("0 (off)"))
+	{
+		return 1;
 	}
+	if (tripleTapDelay.equals("200ms"))
+	{
+		return 200;
+	}
+	if (tripleTapDelay.equals("350ms"))
+	{
+		return 350;
+	}
+	return 500;
+    }
+
+    public int doubleTapAction() {
+	if (doubleTapAction.equals("Zoom cycle"))
+	{
+		return 0;
+	}	
+	//else zoom out
+	return 1;
+    }
+
+    public boolean fullScreen() {
+	return fullScreen;
+    }
 
 	public boolean menuZoomEnabled() {
 		return menuZoom;

@@ -352,7 +352,16 @@
     	<item>iPhone</item>
     	<item>Desktop</item>
     </string-array>
-    
+    <string-array name="pref_triple_tap_delay">
+        <item>0 (off)</item>
+        <item>200ms</item>
+        <item>350ms</item>
+	<item>500ms</item>
+    </string-array>
+    <string-array name="pref_double_tap_action">
+        <item>Zoom in</item>
+        <item>Zoom cycle</item>
+    </string-array>
     <!-- Title of dialog for setting the text size -->
     <string name="pref_text_size_dialogtitle">Text size</string>
     <!-- Do not translate -->

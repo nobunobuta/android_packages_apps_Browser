@@ -48,29 +48,39 @@
                 android:key="block_popup_windows"
                 android:defaultValue="true"
                 android:title="@string/pref_content_block_popups" /> 
+
 		<CheckBoxPreference
 				android:key="onscreen_zoom"
-				android:defaultValue="false"
+				android:defaultValue="true"
 				android:title="Visual zoom controls" />
 				
-		<CheckBoxPreference
+		<ListPreference
+                android:key="double_tap_action"
+                android:title="Double tap action"
+                android:defaultValue="Zoom cycle"
+                android:entries="@array/pref_double_tap_action"
+                android:entryValues="@array/pref_double_tap_action"
+                android:summary="Choose the action that occurs upon double-tap"
+                android:dialogTitle="Choose action" />        
+
+        <CheckBoxPreference
+                android:key="menu_zoom"
+                android:defaultValue="false"
+                android:title="Zoom buttons in menu"
+                android:summary="Show zoom buttons in menu when visual zoom controls are off" /> 
+        
+        <CheckBoxPreference
 				android:key="lock_landscape"
 				android:defaultValue="false"
 				android:title="Lock in landscape"
 				android:summary="Use landscape regardless of device orientation or keyboard position" />
-				
+
 		<CheckBoxPreference
 				android:key="full_screen"
 				android:defaultValue="false"
 				android:title="Hide notification bar"
 				android:summary="REQUIRES RESTART OF BROWSER - you may need to kill the browser task" />
 				
-		<CheckBoxPreference
-				android:key="menu_zoom"
-				android:defaultValue="false"
-				android:title="Zoom buttons in menu"
-				android:summary="Show zoom buttons in menu when visual zoom controls are off" /> 
-		
 		<ListPreference
 				android:key="mobile_webpn2"
 				android:title="Mobile Web Settings"
@@ -169,6 +179,15 @@
                 android:defaultValue="true"
                 android:title="@string/pref_security_remember_passwords"
                 android:summary="@string/pref_security_remember_passwords_summary" />
+
+        <ListPreference
+                android:key="triple_tap_delay"
+                android:title="Triple tap delay"
+                android:defaultValue="500ms"
+                android:entries="@array/pref_triple_tap_delay"
+                android:entryValues="@array/pref_triple_tap_delay"
+		        android:summary="Wait time between second and third taps"
+                android:dialogTitle="Choose delay time" />
 
         <com.android.browser.BrowserYesNoPreference
                 android:key="privacy_clear_passwords"
