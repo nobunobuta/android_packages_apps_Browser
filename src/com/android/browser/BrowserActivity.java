@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
@@ -1290,9 +1291,9 @@ public class BrowserActivity extends Activity
 
     private boolean resumeWebView() {
     	if (mSettings.lockLandscape()) {
-    		this.setRequestedOrientation(0); // lock in landscape
+    		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // lock in landscape
     	} else {
-    		this.setRequestedOrientation(-14); // orient by user setting in OS
+    		this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); // orient by user setting in OS
     	}
    
         if ((!mActivityInPause && !mPageStarted) ||

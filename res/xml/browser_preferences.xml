@@ -180,15 +180,6 @@
                 android:title="@string/pref_security_remember_passwords"
                 android:summary="@string/pref_security_remember_passwords_summary" />
 
-        <ListPreference
-                android:key="triple_tap_delay"
-                android:title="Triple tap delay"
-                android:defaultValue="500ms"
-                android:entries="@array/pref_triple_tap_delay"
-                android:entryValues="@array/pref_triple_tap_delay"
-		        android:summary="Wait time between second and third taps"
-                android:dialogTitle="Choose delay time" />
-
         <com.android.browser.BrowserYesNoPreference
                 android:key="privacy_clear_passwords"
                 android:title="@string/pref_privacy_clear_passwords"
@@ -215,6 +206,16 @@
                     android:defaultValue="true"
                     android:title="@string/pref_extras_gears_enable"
                     android:summary="@string/pref_extras_gears_enable_summary" />
+
+
+        <ListPreference
+                android:key="triple_tap_delay"
+                android:title="Triple tap delay"
+                android:defaultValue="500ms"
+                android:entries="@array/pref_triple_tap_delay"
+                android:entryValues="@array/pref_triple_tap_delay"
+		android:summary="Wait time between second and third taps"
+                android:dialogTitle="Choose delay time" />
 
             <Preference
                     android:key="gears_settings"
