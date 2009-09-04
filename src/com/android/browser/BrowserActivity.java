@@ -91,6 +91,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -120,6 +121,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.browser.MultiTouchController.MultiTouchObjectCanvas;
+import com.android.browser.MultiTouchController.PointInfo;
+import com.android.browser.MultiTouchController.PositionAndScale;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -145,7 +150,7 @@ import java.util.zip.ZipFile;
 public class BrowserActivity extends Activity
     implements KeyTracker.OnKeyTracker,
         View.OnCreateContextMenuListener,
-        DownloadListener {
+        DownloadListener, MultiTouchObjectCanvas<Object> {
 
     /* Define some aliases to make these debugging flags easier to refer to.
      * This file imports android.provider.Browser, so we can't just refer to "Browser.DEBUG".
@@ -158,6 +163,7 @@ public class BrowserActivity extends Activity
     private ServiceConnection mGlsConnection = null;
 
     private SensorManager mSensorManager = null;
+    private MultiTouchController mMultiTouchController;
 
     // These are single-character shortcuts for searching popular sources.
     private static final int SHORTCUT_INVALID = 0;
@@ -765,6 +771,7 @@ public class BrowserActivity extends Activity
             // are not animating from the tab picker.
             attachTabToContentView(mTabControl.getCurrentTab());
         }
+        mMultiTouchController = new MultiTouchController(this, getResources(), false);
     }
 
     @Override
@@ -1679,6 +1686,99 @@ public class BrowserActivity extends Activity
     public void closeFind() {
         mMenuState = R.id.MAIN_MENU;
     }
+    
+    
+//----------------- MultiTouch stuff ------------------
+
+    private static final double ZOOM_SENSITIVITY = 1.6;
+
+    private static final float ZOOM_LOG_BASE_INV = 1.0f / (float) Math.log(2.0 / ZOOM_SENSITIVITY);
+
+    private int mCurrZoom;
+
+    private boolean mIsMultiTouchScaleOp = false, mPoppedUpCannotZoomDialog = false;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (mMultiTouchController.onTouchEvent(event)) {
+	    // Handling a multitouch scale operation.
+            // Need to send a cancel event to reset the WebView state, in case
+            // we're over a link (so that the menu doesn't pop up)
+            if (!mIsMultiTouchScaleOp) {
+                // First multitouch event, cancel any current singletouch ops
+                event.setAction(MotionEvent.ACTION_CANCEL);
+                super.dispatchTouchEvent(event);
+                // Pop up a dialog if can't zoom current view
+                mPoppedUpCannotZoomDialog = false;
+                mIsMultiTouchScaleOp = true;
+            }
+            return true;
+	} else {
+            mIsMultiTouchScaleOp = false;
+        if (super.dispatchTouchEvent(event)) {
+            return true;
+        } else {
+            // We do not use the Dialog class because it places dialogs in the
+            // middle of the screen.  It would take care of dismissing find if
+            // were using it, but we are doing it manually since we are not.
+            if (mFindDialog != null && mFindDialog.isShowing()) {
+                mFindDialog.dismiss();
+            }
+            return false;
+        }
+    }
+    }
+
+    @Override
+    public Object getDraggableObjectAtPoint(PointInfo pt) {
+	// Return some non-null object to initiate multitouch scaling
+        return new Object();
+    }
+
+
+    @Override
+    public void getPositionAndScale(Object obj, PositionAndScale objPosAndScaleOut) {
+	// Always start with the current zoom scale at 1.0, and scale relative to that
+	// (because we only have access to mWebView.zoomIn() and mWebView.zoomOut(),
+	// so it's all relative anyway)
+        objPosAndScaleOut.set(0.0f, 0.0f, 1.0f);
+        mCurrZoom = 0;
+    }
+
+
+    @Override
+    public void selectObject(Object obj, PointInfo pt) {
+    }
+
+
+    @Override
+    public boolean setPositionAndScale(Object obj, PositionAndScale update, PointInfo touchPoint) {
+        float newRelativeScale = update.getScale();
+        int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
+        boolean zoomOk = true;
+        final TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        WebView webView = currentTab.getWebView();
+        
+        while (mCurrZoom > targetZoom) {
+            mCurrZoom--;
+            zoomOk = webView.zoomOut();
+            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
+                Toast.makeText(this, "Cannot zoom out", Toast.LENGTH_SHORT).show();
+                mPoppedUpCannotZoomDialog = true;
+            }
+        }
+        while (mCurrZoom < targetZoom) {
+            mCurrZoom++;
+            zoomOk = webView.zoomIn();
+            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
+                Toast.makeText(this, "Cannot zoom in", Toast.LENGTH_SHORT).show();
+                mPoppedUpCannotZoomDialog = true;
+            }
+        }
+        return true;
+    }
+
+    // ------------------------------------------------------
 
     @Override public boolean onPrepareOptionsMenu(Menu menu)
     {
