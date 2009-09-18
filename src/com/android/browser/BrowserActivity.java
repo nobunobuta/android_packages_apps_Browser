@@ -1541,6 +1541,12 @@ public class BrowserActivity extends Activity
                 break;
 
             case R.id.bookmarks_menu_id:
+		// kludgey, probably not the best place to do this, but we'll set the scale here
+		// just in case a user selects something from bookmarks.
+		TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        	WebView webView = currentTab.getWebView();
+		int currentScalePercent = Math.round(webView.getScale() * 100);
+		webView.setInitialScale(currentScalePercent);	
                 bookmarksOrHistoryPicker(false);
                 break;
 
@@ -4401,6 +4407,7 @@ public class BrowserActivity extends Activity
                     }
                 }); 
 
+
           builder.setNegativeButton("Cancel", null); 
           builder.show(); 
 
@@ -4948,26 +4955,31 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
     @Override
     public boolean onSingleTapUp(MotionEvent ev) {
 	singleTapDetected = true;
+
+	TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        WebView webView = currentTab.getWebView();
+	int currentScalePercent = Math.round(webView.getScale() * 100);
+	webView.setInitialScale(currentScalePercent);	
 	
-	if ((ev.getY() < 20) && (ev.getX() < 30)) // top left click
+	if ((ev.getY() < 40) && (ev.getX() < 30)) // top left click
 	{
                 TabControl.Tab current = mTabControl.getCurrentTab();
                 if (current != null) {
                     dismissSubWindow(current);
-		    if (current.getWebView().getUrl().equals(mSettings.getHomePage()))
+		    if (webView.getUrl().equals(mSettings.getHomePage()))
 		    {
 			Log.d("PN","we're already on the home page");
 			promptToQuit();			
 		    }
 		    else
 		    {
-                    	current.getWebView().loadUrl(mSettings.getHomePage());
+                    	webView.loadUrl(mSettings.getHomePage());
 		    }
                 }
 		return true;
 	}
 
-	if ((ev.getY() < 20) && (ev.getX() > 30)) // top (title bar) click
+	if ((ev.getY() < 40) && (ev.getX() > 30)) // top (title bar) click
 	{	
 		String url = getTopWindow().getUrl();
                 startSearch(mSettings.getHomePage().equals(url) ? null : url, true,
