@@ -48,7 +48,7 @@ class TabControl {
     // Log Tag
     private static final String LOGTAG = "TabControl";
     // Maximum number of tabs.
-    static final int MAX_TABS = 8;
+    static final int MAX_TABS = 32;
     // Static instance of an empty callback.
     private static final WebViewClient mEmptyClient =
             new WebViewClient();
