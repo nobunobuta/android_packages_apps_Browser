@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -314,6 +315,9 @@ public class BrowserHistoryPage extends ExpandableListActivity {
             }
             mNumberOfBins = 0;
             int dateIndex = -1;
+            if(mCursor.isClosed()) {
+                return;
+            }
             if (mCursor.moveToFirst() && mCursor.getCount() > 0) {
                 while (!mCursor.isAfterLast()) {
                     long date = mCursor.getLong(Browser.HISTORY_PROJECTION_DATE_INDEX);
@@ -381,6 +385,10 @@ public class BrowserHistoryPage extends ExpandableListActivity {
             int index = childPosition;
             for (int i = 0; i < groupPosition; i++) {
                 index += mItemMap[i];
+            }
+            // Check for the cursor. if closed then return null
+            if(mCursor.isClosed()) {
+               return null;
             }
             mCursor.moveToPosition(index);
             item.setName(mCursor.getString(Browser.HISTORY_PROJECTION_TITLE_INDEX));
