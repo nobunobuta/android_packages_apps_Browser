@@ -24,10 +24,6 @@
          	android:title="Zoom out" />
         <item android:id="@+id/zoom_in_menu_id"
         	android:title="Zoom in" />
-         <item android:id="@+id/exit_menu_id"
-            android:title="@string/exit_dot"
-            android:alphabeticShortcut="m"
-            android:icon="@drawable/ic_btn_close_panel"/>
         <item android:id="@+id/bookmarks_menu_id"
             android:title="@string/bookmarks" 
             android:alphabeticShortcut="b" 

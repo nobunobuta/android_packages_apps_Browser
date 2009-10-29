@@ -176,12 +176,6 @@
     <string name="new_window">New window</string>
     <!-- Menu item to open a dialog which allows the user to enter a url or do search-->
     <string name="goto_dot">Go</string>
-    <!-- Menu item to exit the window-->
-    <string name="exit_dot">Exit</string>
-    <!-- Confirmation dialog title after users select to exit browser-->
-    <string name="exitConfirmation_title">Close all tabs</string>
-    <!-- Confirmation dialog contents after users select to close all tabs -->
-    <string name="exitConfirmation">This will close all tabs</string>
     <!-- Menu item that opens up a dialog which allows the user to provide a
             string and search for it on the page. -->
     <string name="find_dot">Find on page</string>
