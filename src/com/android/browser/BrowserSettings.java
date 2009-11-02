@@ -68,8 +68,7 @@ class BrowserSettings extends Observable {
     private boolean loginInitialized = false;
     private boolean autoFitPage = true;
     private boolean showDebugSettings = false;
-    private boolean onscreenZoom = true;
-    private boolean menuZoom = false;
+    private boolean onscreenZoom = false;
     private String mobileVersion = "Android";
     private boolean lockLandscape = false;
     private boolean fullScreen = false;
@@ -235,10 +234,8 @@ class BrowserSettings extends Observable {
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
         onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
-        lockLandscape = p.getBoolean("lock_landscape",lockLandscape);
-        fullScreen = p.getBoolean("full_screen",fullScreen);
-        menuZoom = p.getBoolean("menu_zoom",menuZoom);
-
+	lockLandscape = p.getBoolean("lock_landscape",lockLandscape);
+	fullScreen = p.getBoolean("full_screen",fullScreen);
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
         pluginsEnabled = p.getBoolean("enable_plugins",
@@ -359,16 +356,12 @@ class BrowserSettings extends Observable {
     }
 
     public boolean fullScreen() {
-	return fullScreen;
+	    return fullScreen;
     }
 
-	public boolean menuZoomEnabled() {
-		return menuZoom;
-	}
-
-	public boolean lockLandscape() {
-		return lockLandscape;
-	}
+    public boolean lockLandscape() {
+	    return lockLandscape;
+    }
 
     public boolean isLoginInitialized() {
         return loginInitialized;
