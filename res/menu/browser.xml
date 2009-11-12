@@ -20,8 +20,6 @@
             android:title="@string/goto_dot" 
             android:alphabeticShortcut="l" 
             android:icon="@android:drawable/ic_menu_search"/>
-	<item android:id="@+id/stop_reload_menu_id"
-            android:alphabeticShortcut="r" />
         <item android:id="@+id/bookmarks_menu_id"
             android:title="@string/bookmarks" 
             android:alphabeticShortcut="b" 
