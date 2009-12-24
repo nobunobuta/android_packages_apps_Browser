@@ -74,7 +74,7 @@ class BrowserSettings extends Observable {
     private boolean loginInitialized = false;
     private boolean autoFitPage = true;
     private boolean landscapeOnly = false;
-    private boolean loadsPageInOverviewMode = true;
+    private boolean loadsPageInOverviewMode = false;
     private boolean showDebugSettings = false;
     // HTML5 API flags
     private boolean appCacheEnabled = true;
