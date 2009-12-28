@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 
 /**
@@ -32,9 +31,8 @@ public class MultiTouchController<T> {
 		try {
 			getMultitouchEventsMethod = MotionEvent.class.getMethod("getMultitouchEvents");
 			getHistoricalMultitouchEventsMethod = MotionEvent.class.getMethod("getHistoricalMultitouchEvents", Integer.TYPE);
-			Log.i("Multitouch", "Multitouch API found");
 		} catch (Exception e) {
-			Log.i("Multitouch", "Multitouch API not supported on this device");
+			// Ignore
 		}
 	}
 
@@ -405,9 +403,7 @@ public class MultiTouchController<T> {
 				this.x = xMid;
 				this.y = yMid;
 				this.size = Math.max(undecodedSize, 1.0f);
-				
-				Log.i("Multitouch", "Using new API");
-				
+								
 			} else if (undecodedSize > 1.0f) {
 				// The older multitouch patch encoded the dx and dy info in the size field.
 				// 1.0f is the max value for size on an unpatched kernel -- make this backwards-compatible
@@ -430,8 +426,6 @@ public class MultiTouchController<T> {
 					dy = tmp;
 				}
 				
-				Log.i("Multitouch", "Using old API");
-
 			} else {
 				// Single-touch event
 				dx = dy = 0.0f;
