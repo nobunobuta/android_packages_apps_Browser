@@ -183,7 +183,7 @@
   <string-array name="pref_default_zoom_choices">
     <item msgid="549583171195154919">"Entfernt"</item>
     <item msgid="5619034257768161024">"Mittel"</item>
-    <item msgid="3840999588443167001">"Schließen"</item>
+    <item msgid="3840999588443167001">"Nah"</item>
   </string-array>
     <string name="pref_default_zoom_dialogtitle" msgid="6095974367125109021">"Standard-Zoom"</string>
     <string name="pref_content_load_page" msgid="2219810141690955452">"Seiten in der Übersicht öffnen"</string>
