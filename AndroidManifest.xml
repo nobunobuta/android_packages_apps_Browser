@@ -33,11 +33,14 @@
     <uses-permission android:name="com.android.browser.permission.WRITE_HISTORY_BOOKMARKS"/>
     <uses-permission android:name="android.permission.BACKUP_DATA" />
 
+
     <application   android:name="Browser"
                    android:label="@string/application_name"
                    android:icon="@drawable/ic_launcher_browser"
                    android:backupAgent=".BrowserBackupAgent"
                    android:taskAffinity="android.task.browser" >
+
+        <uses-library android:name="com.cyanogenmod.android" />
 
         <provider android:name="BrowserProvider"
                   android:authorities="browser"

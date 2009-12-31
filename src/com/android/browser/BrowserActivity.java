@@ -16,8 +16,19 @@
 
 package com.android.browser;
 
-import com.google.android.googleapps.IGoogleLoginService;
-import com.google.android.googlelogin.GoogleLoginServiceConstants;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -38,7 +49,6 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -47,9 +57,6 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.DrawFilter;
-import android.graphics.Paint;
-import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.Picture;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -57,10 +64,8 @@ import android.graphics.drawable.Drawable;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.WebAddress;
-import android.net.http.EventHandler;
 import android.net.http.SslCertificate;
 import android.net.http.SslError;
 import android.os.AsyncTask;
@@ -77,9 +82,9 @@ import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Browser;
 import android.provider.ContactsContract;
-import android.provider.ContactsContract.Intents.Insert;
 import android.provider.Downloads;
 import android.provider.MediaStore;
+import android.provider.ContactsContract.Intents.Insert;
 import android.text.IClipboard;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -93,18 +98,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.ScaleAnimation;
-import android.view.animation.TranslateAnimation;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.DownloadListener;
@@ -115,7 +115,6 @@ import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.WebChromeClient.CustomViewCallback;
 import android.webkit.WebHistoryItem;
 import android.webkit.WebIconDatabase;
 import android.webkit.WebStorage;
@@ -127,32 +126,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import com.cyanogenmod.android.input.MultiTouchController;
+import com.cyanogenmod.android.input.MultiTouchController.MultiTouchObjectCanvas;
+import com.cyanogenmod.android.input.MultiTouchController.PointInfo;
+import com.cyanogenmod.android.input.MultiTouchController.PositionAndScale;
+import com.google.android.googleapps.IGoogleLoginService;
+import com.google.android.googlelogin.GoogleLoginServiceConstants;
+
+
 
 public class BrowserActivity extends Activity
     implements View.OnCreateContextMenuListener,
-        DownloadListener {
+        DownloadListener, MultiTouchObjectCanvas<Object> {
 
     /* Define some aliases to make these debugging flags easier to refer to.
      * This file imports android.provider.Browser, so we can't just refer to "Browser.DEBUG".
@@ -166,6 +151,8 @@ public class BrowserActivity extends Activity
 
     private SensorManager mSensorManager = null;
 
+    private MultiTouchController mMultiTouchController;
+    
     // These are single-character shortcuts for searching popular sources.
     private static final int SHORTCUT_INVALID = 0;
     private static final int SHORTCUT_GOOGLE_SEARCH = 1;
@@ -481,6 +468,8 @@ public class BrowserActivity extends Activity
         if (jsFlags.trim().length() != 0) {
             mTabControl.getCurrentWebView().setJsFlags(jsFlags);
         }
+        
+        mMultiTouchController = new MultiTouchController(this, getResources(), false);
     }
 
     @Override
@@ -1668,6 +1657,98 @@ public class BrowserActivity extends Activity
         return true;
     }
 
+  //----------------- MultiTouch stuff ------------------
+
+    private static final double ZOOM_SENSITIVITY = 1.6;
+
+    private static final float ZOOM_LOG_BASE_INV = 1.0f / (float) Math.log(2.0 / ZOOM_SENSITIVITY);
+
+    private int mCurrZoom;
+
+    private boolean mIsMultiTouchScaleOp = false, mPoppedUpCannotZoomDialog = false;
+
+	@Override
+	public boolean dispatchTouchEvent(MotionEvent event) {
+
+		if (mMultiTouchController.onTouchEvent(event)) {
+			// Handling a multitouch scale operation.
+			// Need to send a cancel event to reset the WebView state, in case
+			// we're over a link (so that the menu doesn't pop up)
+			if (!mIsMultiTouchScaleOp) {
+				// First multitouch event, cancel any current singletouch ops
+				event.setAction(MotionEvent.ACTION_CANCEL);
+				super.dispatchTouchEvent(event);
+				// Pop up a dialog if can't zoom current view
+				mPoppedUpCannotZoomDialog = false;
+				mIsMultiTouchScaleOp = true;
+			}
+			return true;
+		} else {
+			mIsMultiTouchScaleOp = false;
+			if (super.dispatchTouchEvent(event)) {
+				return true;
+			} else {
+				// We do not use the Dialog class because it places dialogs in
+				// the middle of the screen. It would take care of dismissing find
+				// if were using it, but we are doing it manually since we are not.
+				if (mFindDialog != null && mFindDialog.isShowing()) {
+					mFindDialog.dismiss();
+				}
+				return false;
+			}
+		}
+	}
+
+    @Override
+    public Object getDraggableObjectAtPoint(PointInfo pt) {
+    // Return some non-null object to initiate multitouch scaling
+        return new Object();
+    }
+    @Override
+    public void getPositionAndScale(Object obj, PositionAndScale objPosAndScaleOut) {
+    // Always start with the current zoom scale at 1.0, and scale relative to that
+    // (because we only have access to mWebView.zoomIn() and mWebView.zoomOut(),
+    // so it's all relative anyway)
+        objPosAndScaleOut.set(0.0f, 0.0f, 1.0f);
+        mCurrZoom = 0;
+    }
+
+
+    @Override
+    public void selectObject(Object obj, PointInfo pt) {
+    }
+
+    @Override
+    public boolean setPositionAndScale(Object obj, PositionAndScale update, PointInfo touchPoint) {
+        float newRelativeScale = update.getScale();
+        int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
+        boolean zoomOk = true;
+        final TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        WebView webView = currentTab.getWebView();
+
+        while (mCurrZoom > targetZoom) {
+            mCurrZoom--;
+            zoomOk = webView.zoomOut();
+            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
+                Toast.makeText(this, "Cannot zoom out", Toast.LENGTH_SHORT).show();
+                mPoppedUpCannotZoomDialog = true;
+            }
+        }
+        while (mCurrZoom < targetZoom) {
+            mCurrZoom++;
+            zoomOk = webView.zoomIn();
+            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
+                Toast.makeText(this, "Cannot zoom in", Toast.LENGTH_SHORT).show();
+                mPoppedUpCannotZoomDialog = true;
+            }
+        }
+        return true;
+    }
+
+    // ------------------------------------------------------
+
+    
+    
     public void closeFind() {
         mMenuState = R.id.MAIN_MENU;
     }
