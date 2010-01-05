@@ -1678,7 +1678,7 @@ public class BrowserActivity extends Activity
         return true;
     }
 
-  //----------------- MultiTouch stuff ------------------
+    //----------------- MultiTouch stuff ------------------
 
     private static final double ZOOM_SENSITIVITY = 1.6;
 
