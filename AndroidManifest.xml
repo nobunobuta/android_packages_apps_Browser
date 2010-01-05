@@ -39,6 +39,8 @@
                    android:backupAgent=".BrowserBackupAgent"
                    android:taskAffinity="android.task.browser" >
 
+        <uses-library android:name="com.cyanogenmod.android" />
+
         <provider android:name="BrowserProvider"
                   android:authorities="browser"
                   android:multiprocess="true"

@@ -151,9 +151,10 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.android.browser.MultiTouchController.MultiTouchObjectCanvas;
-import com.android.browser.MultiTouchController.PointInfo;
-import com.android.browser.MultiTouchController.PositionAndScale;
+import com.cyanogenmod.android.input.MultiTouchController;
+import com.cyanogenmod.android.input.MultiTouchController.MultiTouchObjectCanvas;
+import com.cyanogenmod.android.input.MultiTouchController.PointInfo;
+import com.cyanogenmod.android.input.MultiTouchController.PositionAndScale;
 
 public class BrowserActivity extends Activity
     implements View.OnCreateContextMenuListener,
