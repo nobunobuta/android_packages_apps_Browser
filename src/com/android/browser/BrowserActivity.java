@@ -1657,7 +1657,7 @@ public class BrowserActivity extends Activity
         return true;
     }
 
-  //----------------- MultiTouch stuff ------------------
+    //----------------- MultiTouch stuff ------------------
 
     private static final double ZOOM_SENSITIVITY = 1.6;
 
@@ -1665,7 +1665,7 @@ public class BrowserActivity extends Activity
 
     private int mCurrZoom;
 
-    private boolean mIsMultiTouchScaleOp = false, mPoppedUpCannotZoomDialog = false;
+    private boolean mIsMultiTouchScaleOp = false;
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event) {
@@ -1678,8 +1678,6 @@ public class BrowserActivity extends Activity
 				// First multitouch event, cancel any current singletouch ops
 				event.setAction(MotionEvent.ACTION_CANCEL);
 				super.dispatchTouchEvent(event);
-				// Pop up a dialog if can't zoom current view
-				mPoppedUpCannotZoomDialog = false;
 				mIsMultiTouchScaleOp = true;
 			}
 			return true;
@@ -1689,8 +1687,10 @@ public class BrowserActivity extends Activity
 				return true;
 			} else {
 				// We do not use the Dialog class because it places dialogs in
-				// the middle of the screen. It would take care of dismissing find
-				// if were using it, but we are doing it manually since we are not.
+				// the
+				// middle of the screen. It would take care of dismissing find
+				// if
+				// were using it, but we are doing it manually since we are not.
 				if (mFindDialog != null && mFindDialog.isShowing()) {
 					mFindDialog.dismiss();
 				}
@@ -1704,6 +1704,7 @@ public class BrowserActivity extends Activity
     // Return some non-null object to initiate multitouch scaling
         return new Object();
     }
+    
     @Override
     public void getPositionAndScale(Object obj, PositionAndScale objPosAndScaleOut) {
     // Always start with the current zoom scale at 1.0, and scale relative to that
@@ -1722,26 +1723,29 @@ public class BrowserActivity extends Activity
     public boolean setPositionAndScale(Object obj, PositionAndScale update, PointInfo touchPoint) {
         float newRelativeScale = update.getScale();
         int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
-        boolean zoomOk = true;
         final TabControl.Tab currentTab = mTabControl.getCurrentTab();
         WebView webView = currentTab.getWebView();
-
-        while (mCurrZoom > targetZoom) {
-            mCurrZoom--;
-            zoomOk = webView.zoomOut();
-            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
-                Toast.makeText(this, "Cannot zoom out", Toast.LENGTH_SHORT).show();
-                mPoppedUpCannotZoomDialog = true;
+        
+        webView.getSettings().setBuiltInZoomControls(false);
+        
+        if (mCurrZoom > targetZoom) {
+        	while (mCurrZoom > targetZoom) {
+        		mCurrZoom--;
+        		if (!webView.zoomOut()) {
+        			break;
+        		}
             }
+        } else if (mCurrZoom < targetZoom) {
+        	while (mCurrZoom < targetZoom) {
+        		mCurrZoom++;
+        		if (!webView.zoomIn()) {
+        			break;
+        		}
+        	}
         }
-        while (mCurrZoom < targetZoom) {
-            mCurrZoom++;
-            zoomOk = webView.zoomIn();
-            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
-                Toast.makeText(this, "Cannot zoom in", Toast.LENGTH_SHORT).show();
-                mPoppedUpCannotZoomDialog = true;
-            }
-        }
+        
+        webView.getSettings().setBuiltInZoomControls(true);
+                
         return true;
     }
 
