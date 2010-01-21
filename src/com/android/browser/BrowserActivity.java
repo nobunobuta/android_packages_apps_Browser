@@ -1699,13 +1699,11 @@ public class BrowserActivity extends Activity
 		}
 	}
 
-    @Override
     public Object getDraggableObjectAtPoint(PointInfo pt) {
     // Return some non-null object to initiate multitouch scaling
         return new Object();
     }
     
-    @Override
     public void getPositionAndScale(Object obj, PositionAndScale objPosAndScaleOut) {
     // Always start with the current zoom scale at 1.0, and scale relative to that
     // (because we only have access to mWebView.zoomIn() and mWebView.zoomOut(),
@@ -1714,12 +1712,9 @@ public class BrowserActivity extends Activity
         mCurrZoom = 0;
     }
 
-
-    @Override
     public void selectObject(Object obj, PointInfo pt) {
     }
 
-    @Override
     public boolean setPositionAndScale(Object obj, PositionAndScale update, PointInfo touchPoint) {
         float newRelativeScale = update.getScale();
         int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
