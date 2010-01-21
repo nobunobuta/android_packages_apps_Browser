@@ -292,6 +292,6 @@
     <string name="website_settings_clear_all_dialog_cancel_button" msgid="1896757051856611674">"キャンセル"</string>
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"全体表示"</string>
 
-    <!-- Do not tranlsate.  Development option -->
-    <string name="pref_development_uastring" translatable="false">User Agent</string>
+    <!-- nobunobuta Addition -->
+    <string name="pref_nobunobuta_uastring">User Agent</string>
 </resources>

@@ -197,7 +197,7 @@
 
             <ListPreference
                android:key="user_agent"
-               android:title="@string/pref_development_uastring"
+               android:title="@string/pref_nobunobuta_uastring"
                android:entries="@array/pref_development_ua_choices"
                android:entryValues="@array/pref_development_ua_values"
                android:defaultValue="0"/>

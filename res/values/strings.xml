@@ -766,4 +766,6 @@
     <string name="error_console_eval_text_hint" translatable="false">Evaluate JavaScript</string>
     <string name="error_console_eval_button_text" translatable="false">Evaluate</string>
 
+    <!-- nobunobuta Addition -->
+    <string name="pref_nobunobuta_uastring">User Agent</string>
 </resources>
