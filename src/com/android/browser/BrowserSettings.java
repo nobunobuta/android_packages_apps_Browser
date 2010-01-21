@@ -339,6 +339,10 @@ class BrowserSettings extends Observable {
             doFlick = p.getBoolean("enable_flick", doFlick);
             userAgent = Integer.parseInt(p.getString("user_agent", "0"));
         }
+
+        // By nobunobuta User Agent Setting
+        userAgent = Integer.parseInt(p.getString("user_agent", "0"));
+        
         // JS flags is loaded from DB even if showDebugSettings is false,
         // so that it can be set once and be effective all the time.
         jsFlags = p.getString("js_engine_flags", "");

@@ -195,6 +195,13 @@
                   android:title="@string/pref_extras_website_settings"
                   android:summary="@string/pref_extras_website_settings_summary" />
 
+            <ListPreference
+               android:key="user_agent"
+               android:title="@string/pref_development_uastring"
+               android:entries="@array/pref_development_ua_choices"
+               android:entryValues="@array/pref_development_ua_values"
+               android:defaultValue="0"/>
+
             <com.android.browser.BrowserYesNoPreference
                     android:key="reset_default_preferences"
                     android:title="@string/pref_extras_reset_default"
@@ -202,5 +209,5 @@
                     android:dialogMessage="@string/pref_extras_reset_default_dlg" 
                     android:dialogTitle="@string/pref_extras_reset_default_dlg_title" 
                     android:dialogIcon="@android:drawable/ic_dialog_alert" />
-    </PreferenceCategory>
+   </PreferenceCategory>
 </PreferenceScreen>

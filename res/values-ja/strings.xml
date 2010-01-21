@@ -291,4 +291,7 @@
     <string name="website_settings_clear_all_dialog_ok_button" msgid="6401582240627669431">"すべてのデータを削除"</string>
     <string name="website_settings_clear_all_dialog_cancel_button" msgid="1896757051856611674">"キャンセル"</string>
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"全体表示"</string>
+
+    <!-- Do not tranlsate.  Development option -->
+    <string name="pref_development_uastring" translatable="false">User Agent</string>
 </resources>
