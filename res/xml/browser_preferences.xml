@@ -198,8 +198,9 @@
             <ListPreference
                android:key="user_agent"
                android:title="@string/pref_nobunobuta_uastring"
-               android:entries="@array/pref_development_ua_choices"
-               android:entryValues="@array/pref_development_ua_values"
+               android:summary="@string/pref_nobunobuta_ua_summary"
+               android:entries="@array/pref_nobunobuta_ua_choices"
+               android:entryValues="@array/pref_nobunobuta_ua_values"
                android:defaultValue="0"/>
 
             <com.android.browser.BrowserYesNoPreference

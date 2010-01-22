@@ -768,4 +768,15 @@
 
     <!-- nobunobuta Addition -->
     <string name="pref_nobunobuta_uastring">User Agent</string>
+    <string name="pref_nobunobuta_ua_summary">"Customizing User Agent String"</string>
+    <string-array name="pref_nobunobuta_ua_choices">
+        <item>Android</item>
+        <item>Desktop</item>
+        <item>iPhone</item>
+    </string-array>
+    <string-array name="pref_nobunobuta_ua_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

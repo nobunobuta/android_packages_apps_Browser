@@ -293,5 +293,16 @@
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"全体表示"</string>
 
     <!-- nobunobuta Addition -->
-    <string name="pref_nobunobuta_uastring">User Agent</string>
+    <string name="pref_nobunobuta_uastring">"ユーザエージェント"</string>
+    <string name="pref_nobunobuta_ua_summary">"ブラウザのユーザエージェントの設定を行います"</string>
+    <string-array name="pref_nobunobuta_ua_choices">
+        <item>"Android"</item>
+        <item>"Desktop PC"</item>
+        <item>"iPhone"</item>
+    </string-array>
+    <string-array name="pref_nobunobuta_ua_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>
