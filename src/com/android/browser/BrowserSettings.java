@@ -76,6 +76,7 @@ class BrowserSettings extends Observable {
     private boolean landscapeOnly = false;
     private boolean loadsPageInOverviewMode = true;
     private boolean showDebugSettings = false;
+    private boolean onscreenZoom = true;
     // HTML5 API flags
     private boolean appCacheEnabled = true;
     private boolean databaseEnabled = true;
@@ -204,7 +205,8 @@ class BrowserSettings extends Observable {
             s.setSaveFormData(b.saveFormData);
             s.setSavePassword(b.rememberPasswords);
             s.setLoadWithOverviewMode(b.loadsPageInOverviewMode);
-
+            s.setBuiltInZoomControls(b.onscreenZoom);
+            
             // WebView inside Browser doesn't want initial focus to be set.
             s.setNeedInitialFocus(false);
             // Browser supports multiple windows
@@ -270,6 +272,7 @@ class BrowserSettings extends Observable {
 
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
+        onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
         pluginsEnabled = p.getBoolean("enable_plugins",
@@ -382,6 +385,10 @@ class BrowserSettings extends Observable {
         homeUrl = url;
     }
 
+    public boolean onscreenZoomEnabled() {
+    	return onscreenZoom;
+    }
+    
     public boolean isLoginInitialized() {
         return loginInitialized;
     }
