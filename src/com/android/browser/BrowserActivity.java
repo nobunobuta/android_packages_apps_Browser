@@ -1720,9 +1720,7 @@ public class BrowserActivity extends Activity
         int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
         final TabControl.Tab currentTab = mTabControl.getCurrentTab();
         WebView webView = currentTab.getWebView();
-        
-        webView.getSettings().setBuiltInZoomControls(false);
-        
+                
         if (mCurrZoom > targetZoom) {
         	while (mCurrZoom > targetZoom) {
         		mCurrZoom--;
@@ -1738,9 +1736,7 @@ public class BrowserActivity extends Activity
         		}
         	}
         }
-        
-        webView.getSettings().setBuiltInZoomControls(true);
-                
+                        
         return true;
     }
 
