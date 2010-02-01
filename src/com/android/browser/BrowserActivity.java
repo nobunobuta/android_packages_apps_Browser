@@ -1678,7 +1678,7 @@ public class BrowserActivity extends Activity
         return true;
     }
 
-  //----------------- MultiTouch stuff ------------------
+    //----------------- MultiTouch stuff ------------------
 
     private static final double ZOOM_SENSITIVITY = 1.6;
 
@@ -1720,13 +1720,11 @@ public class BrowserActivity extends Activity
 		}
 	}
 
-    @Override
     public Object getDraggableObjectAtPoint(PointInfo pt) {
     // Return some non-null object to initiate multitouch scaling
         return new Object();
     }
     
-    @Override
     public void getPositionAndScale(Object obj, PositionAndScale objPosAndScaleOut) {
     // Always start with the current zoom scale at 1.0, and scale relative to that
     // (because we only have access to mWebView.zoomIn() and mWebView.zoomOut(),
@@ -1735,20 +1733,15 @@ public class BrowserActivity extends Activity
         mCurrZoom = 0;
     }
 
-
-    @Override
     public void selectObject(Object obj, PointInfo pt) {
     }
 
-    @Override
     public boolean setPositionAndScale(Object obj, PositionAndScale update, PointInfo touchPoint) {
         float newRelativeScale = update.getScale();
         int targetZoom = (int) Math.round(Math.log(newRelativeScale) * ZOOM_LOG_BASE_INV);
         final TabControl.Tab currentTab = mTabControl.getCurrentTab();
         WebView webView = currentTab.getWebView();
-        
-        webView.getSettings().setBuiltInZoomControls(false);
-        
+                
         if (mCurrZoom > targetZoom) {
         	while (mCurrZoom > targetZoom) {
         		mCurrZoom--;
@@ -1764,9 +1757,7 @@ public class BrowserActivity extends Activity
         		}
         	}
         }
-        
-        webView.getSettings().setBuiltInZoomControls(true);
-                
+                        
         return true;
     }
 
@@ -3554,7 +3545,9 @@ public class BrowserActivity extends Activity
             mTabControl.getCurrentTab().getGeolocationPermissionsPrompt().hide();
         }
 
-        /* Adds a JavaScript error message to the system log.
+        /* Adds a JavaScript error message to the system log and if the JS
+         * console is enabled in the about:debug options, to that console
+         * also.
          * @param message The error message to report.
          * @param lineNumber The line number of the error.
          * @param sourceID The name of the source file that caused the error.

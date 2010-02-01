@@ -418,6 +418,10 @@
         <item><xliff:g>CLOSE</xliff:g></item>
     </string-array>
     <!-- Settings label -->
+    <string name="pref_onscreen_zoom">On-screen zoom controls</string>
+    <!-- Settings summary -->
+    <string name="pref_onscreen_zoom_summary">Display the on-screen zoom controls</string>
+    <!-- Settings label -->
     <string name="pref_content_load_page">Open pages in overview</string>
     <!-- Settings summary -->
     <string name="pref_content_load_page_summary">Show overview of newly opened pages</string>
