@@ -4,7 +4,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := user
 
 LOCAL_STATIC_JAVA_LIBRARIES := google-framework
-LOCAL_JAVA_LIBRARIES := com.cyanogenmod.android
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
