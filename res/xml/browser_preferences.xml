@@ -37,12 +37,6 @@
                 android:dialogTitle="@string/pref_default_zoom_dialogtitle" />
 
         <CheckBoxPreference
-                android:key="onscreen_zoom"
-                android:defaultValue="true"
-                android:title="@string/pref_onscreen_zoom"
-                android:summary="@string/pref_onscreen_zoom_summary" />
-
-        <CheckBoxPreference
                 android:key="load_page"
                 android:defaultValue="true"
                 android:title="@string/pref_content_load_page"
