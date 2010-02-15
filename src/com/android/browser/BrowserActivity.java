@@ -3553,7 +3553,7 @@ public class BrowserActivity extends Activity
          * @param sourceID The name of the source file that caused the error.
          */
         @Override
-        public void addMessageToConsole(String message, int lineNumber, String sourceID) {
+        public void onConsoleMessage(String message, int lineNumber, String sourceID) {
             ErrorConsoleView errorConsole = mTabControl.getCurrentErrorConsole(true);
             errorConsole.addErrorMessage(message, sourceID, lineNumber);
                 if (mShouldShowErrorConsole &&
