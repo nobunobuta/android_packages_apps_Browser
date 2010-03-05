@@ -765,5 +765,9 @@
     <string name="error_console_header_text_maximized" translatable="false">JavaScript console</string>
     <string name="error_console_eval_text_hint" translatable="false">Evaluate JavaScript</string>
     <string name="error_console_eval_button_text" translatable="false">Evaluate</string>
+    
+    <!-- Wysie -->
+    <string name="pref_show_zoom_controls">Show visual zoom controls</string>
+    <string name="pref_full_screen_mode">Full screen</string>
 
 </resources>
