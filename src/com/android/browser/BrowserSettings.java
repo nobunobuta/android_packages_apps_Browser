@@ -309,6 +309,7 @@ class BrowserSettings extends Observable {
         showZoomControls = p.getBoolean("show_zoom_controls", showZoomControls);
         fullScreen = p.getBoolean("full_screen_mode", fullScreen);
         updateFullscreenStatus();
+        userAgent = Integer.parseInt(p.getString("web_user_agent", "0"));
         
         loadsPageInOverviewMode = p.getBoolean("load_page",
                 loadsPageInOverviewMode);
@@ -354,7 +355,8 @@ class BrowserSettings extends Observable {
             lightTouch = p.getBoolean("enable_light_touch", lightTouch);
             navDump = p.getBoolean("enable_nav_dump", navDump);
             doFlick = p.getBoolean("enable_flick", doFlick);
-            userAgent = Integer.parseInt(p.getString("user_agent", "0"));
+            //Wysie: Commented out
+            //userAgent = Integer.parseInt(p.getString("web_user_agent", "0"));
         }
         // JS flags is loaded from DB even if showDebugSettings is false,
         // so that it can be set once and be effective all the time.
