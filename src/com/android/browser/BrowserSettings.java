@@ -154,6 +154,8 @@ class BrowserSettings extends Observable {
     private static final String IPHONE_USERAGENT = "Mozilla/5.0 (iPhone; U; " +
             "CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 " +
             "(KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16";
+            
+    private static final String IE6_USERAGENT = "Mozilla/4.0 (compatible; MSIE 6.1; Windows XP)";
 
     // Value to truncate strings when adding them to a TextView within
     // a ListView
@@ -193,6 +195,8 @@ class BrowserSettings extends Observable {
                 s.setUserAgentString(DESKTOP_USERAGENT);
             } else if (b.userAgent == 2) {
                 s.setUserAgentString(IPHONE_USERAGENT);
+            } else if (b.userAgent == 3) {
+                s.setUserAgentString(IE6_USERAGENT);
             }
             s.setUseWideViewPort(b.useWideViewPort);
             s.setLoadsImagesAutomatically(b.loadsImagesAutomatically);
