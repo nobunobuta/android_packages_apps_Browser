@@ -291,4 +291,21 @@
     <string name="website_settings_clear_all_dialog_ok_button" msgid="6401582240627669431">"Vymazat všechna data"</string>
     <string name="website_settings_clear_all_dialog_cancel_button" msgid="1896757051856611674">"Zrušit"</string>
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"Přehled"</string>
+<!-- Wysie -->
+    <string name="pref_show_zoom_controls">Zobrazit ovládání zoomu</string>
+    <string name="pref_full_screen_mode">Celá obrazovka</string>
+    <string name="pref_user_agent_title">User agent</string>
+    <string name="pref_user_agent_dialog">Zvolte user agenta</string>
+    <string-array name="pref_user_agent">
+    	<item>Android</item>
+    	<item>Desktop</item>
+    	<item>iPhone</item>
+    	<item>Internet Explorer 6</item>
+    </string-array>
+    <string-array name="pref_user_agent_values">
+    	<item>0</item>
+    	<item>1</item>
+    	<item>2</item>
+    	<item>3</item>
+    </string-array>
 </resources>
