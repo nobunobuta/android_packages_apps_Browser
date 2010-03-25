@@ -296,16 +296,4 @@
     <string name="pref_full_screen_mode">Celá obrazovka</string>
     <string name="pref_user_agent_title">User agent</string>
     <string name="pref_user_agent_dialog">Zvolte user agenta</string>
-    <string-array name="pref_user_agent">
-    	<item>Android</item>
-    	<item>Desktop</item>
-    	<item>iPhone</item>
-    	<item>Internet Explorer 6</item>
-    </string-array>
-    <string-array name="pref_user_agent_values">
-    	<item>0</item>
-    	<item>1</item>
-    	<item>2</item>
-    	<item>3</item>
-    </string-array>
 </resources>
