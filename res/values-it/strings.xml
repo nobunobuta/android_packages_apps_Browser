@@ -270,7 +270,7 @@
     <string name="webstorage_clear_data_summary" msgid="3523128713743907805">"Rimuovi tutti i database associati al sito web"</string>
     <string name="webstorage_clear_data_dialog_title" msgid="345457466368974706">"Cancella dati archiviati"</string>
     <string name="webstorage_clear_data_dialog_message" msgid="6678281256970470125">"Tutti i dati archiviati da questo sito web verranno eliminati"</string>
-    <string name="webstorage_clear_data_dialog_ok_button" msgid="2516563534211898636">"Clear all"</string>
+    <string name="webstorage_clear_data_dialog_ok_button" msgid="2516563534211898636">"Elimina tutto"</string>
     <string name="webstorage_clear_data_dialog_cancel_button" msgid="2028867751958942762">"Annulla"</string>
     <string name="webstorage_origin_summary_mb_stored" msgid="1985885826292236210">"MB memorizzati sul telefono"</string>
     <string name="loading_video" msgid="4887871585216091096">"Caricamento video in corso"</string>
@@ -291,4 +291,25 @@
     <string name="website_settings_clear_all_dialog_ok_button" msgid="6401582240627669431">"Elimina tutti i dati"</string>
     <string name="website_settings_clear_all_dialog_cancel_button" msgid="1896757051856611674">"Annulla"</string>
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"Panoramica"</string>
+
+    <!-- Wysie -->
+    <string name="pref_show_zoom_controls">Mostra controlli zoom</string>
+    <string name="pref_full_screen_mode">Schermo intero</string>
+    <string name="pref_user_agent_title">User agent</string>
+    <string name="pref_user_agent_dialog">Seleziona user agent</string>
+    
+    <string-array name="pref_user_agent">
+    	<item>Android</item>
+    	<item>Desktop</item>
+    	<item>iPhone</item>
+    	<item>Internet Explorer 6</item>
+    </string-array>
+
+    <string-array name="pref_user_agent_values">
+    	<item>0</item>
+    	<item>1</item>
+    	<item>2</item>
+    	<item>3</item>
+    </string-array>
 </resources>
+

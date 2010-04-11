@@ -35,6 +35,24 @@
                 android:entries="@array/pref_default_zoom_choices"
                 android:entryValues="@array/pref_default_zoom_values"
                 android:dialogTitle="@string/pref_default_zoom_dialogtitle" />
+                
+        <CheckBoxPreference
+                android:key="show_zoom_controls"
+                android:defaultValue="true"
+                android:title="@string/pref_show_zoom_controls" />
+                
+        <CheckBoxPreference
+                android:key="full_screen_mode"
+                android:defaultValue="false"
+                android:title="@string/pref_full_screen_mode" />
+                
+        <ListPreference
+				android:key="web_user_agent"
+				android:title="@string/pref_user_agent_title"
+				android:defaultValue="0"
+				android:entries="@array/pref_user_agent"
+				android:entryValues="@array/pref_user_agent_values"
+				android:dialogTitle="@string/pref_user_agent_dialog" />
 
         <CheckBoxPreference
                 android:key="onscreen_zoom"
