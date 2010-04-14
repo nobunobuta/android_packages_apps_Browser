@@ -292,6 +292,10 @@
     <string name="website_settings_clear_all_dialog_cancel_button" msgid="1896757051856611674">"Abbrechen"</string>
     <string name="zoom_overview_button_text" msgid="4146579940085488881">"Übersicht"</string>
 
-    <string name="pref_onscreen_zoom">Steuerung für Zoom</string>
-    <string name="pref_onscreen_zoom_summary">Zeige die Steuerelemente für den Zoom.</string>
+    <!-- Wysie -->
+    <string name="pref_show_zoom_controls">Zeige Zoomtasten</string>
+    <string name="pref_full_screen_mode">Vollbild</string>
+    <string name="pref_user_agent_title">User-Agent</string>
+    <string name="pref_user_agent_dialog">Wähle User-Agent</string>
+
 </resources>

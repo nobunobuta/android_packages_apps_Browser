@@ -1,6 +1,7 @@
 
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2010 Sony Ericsson Mobile Communications AB
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +43,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Observable;
 
+//Wysie
+import android.view.WindowManager;
+
 /*
  * Package level class for storing various WebView and Browser settings. To use
  * this class:
@@ -76,7 +80,11 @@ class BrowserSettings extends Observable {
     private boolean landscapeOnly = false;
     private boolean loadsPageInOverviewMode = false;
     private boolean showDebugSettings = false;
-    private boolean onscreenZoom = true;
+    
+    //Wysie
+    private boolean showZoomControls = true;
+    private boolean fullScreen = false;
+    
     // HTML5 API flags
     private boolean appCacheEnabled = true;
     private boolean databaseEnabled = true;
@@ -147,6 +155,8 @@ class BrowserSettings extends Observable {
     private static final String IPHONE_USERAGENT = "Mozilla/5.0 (iPhone; U; " +
             "CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 " +
             "(KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16";
+            
+    private static final String IE6_USERAGENT = "Mozilla/4.0 (compatible; MSIE 6.1; Windows XP)";
 
     // Value to truncate strings when adding them to a TextView within
     // a ListView
@@ -186,6 +196,8 @@ class BrowserSettings extends Observable {
                 s.setUserAgentString(DESKTOP_USERAGENT);
             } else if (b.userAgent == 2) {
                 s.setUserAgentString(IPHONE_USERAGENT);
+            } else if (b.userAgent == 3) {
+                s.setUserAgentString(IE6_USERAGENT);
             }
             s.setUseWideViewPort(b.useWideViewPort);
             s.setLoadsImagesAutomatically(b.loadsImagesAutomatically);
@@ -205,8 +217,10 @@ class BrowserSettings extends Observable {
             s.setSaveFormData(b.saveFormData);
             s.setSavePassword(b.rememberPasswords);
             s.setLoadWithOverviewMode(b.loadsPageInOverviewMode);
-            s.setBuiltInZoomControls(b.onscreenZoom);
             
+            //Wysie
+            s.showZoomControls(b.showZoomControls);
+
             // WebView inside Browser doesn't want initial focus to be set.
             s.setNeedInitialFocus(false);
             // Browser supports multiple windows
@@ -272,7 +286,6 @@ class BrowserSettings extends Observable {
 
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
-        onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
         pluginsEnabled = p.getBoolean("enable_plugins",
@@ -296,6 +309,13 @@ class BrowserSettings extends Observable {
         zoomDensity = WebSettings.ZoomDensity.valueOf(
                 p.getString(PREF_DEFAULT_ZOOM, zoomDensity.name()));
         autoFitPage = p.getBoolean("autofit_pages", autoFitPage);
+        
+        //Wysie
+        showZoomControls = p.getBoolean("show_zoom_controls", showZoomControls);
+        fullScreen = p.getBoolean("full_screen_mode", fullScreen);
+        updateFullscreenStatus();
+        userAgent = Integer.parseInt(p.getString("web_user_agent", "0"));
+        
         loadsPageInOverviewMode = p.getBoolean("load_page",
                 loadsPageInOverviewMode);
         boolean landscapeOnlyTemp =
@@ -340,7 +360,8 @@ class BrowserSettings extends Observable {
             lightTouch = p.getBoolean("enable_light_touch", lightTouch);
             navDump = p.getBoolean("enable_nav_dump", navDump);
             doFlick = p.getBoolean("enable_flick", doFlick);
-            userAgent = Integer.parseInt(p.getString("user_agent", "0"));
+            //Wysie: Commented out
+            //userAgent = Integer.parseInt(p.getString("web_user_agent", "0"));
         }
 
         // By nobunobuta User Agent Setting
@@ -368,6 +389,19 @@ class BrowserSettings extends Observable {
 
         update();
     }
+    
+    private void updateFullscreenStatus() {
+        if(fullScreen) {
+            mTabControl.getBrowserActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            mTabControl.getBrowserActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        }
+        else {
+            mTabControl.getBrowserActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            mTabControl.getBrowserActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+        //mTabControl.getBrowserActivity().requestLayout();
+    }
+
 
     public String getHomePage() {
         return homeUrl;
@@ -389,10 +423,6 @@ class BrowserSettings extends Observable {
         homeUrl = url;
     }
 
-    public boolean onscreenZoomEnabled() {
-    	return onscreenZoom;
-    }
-    
     public boolean isLoginInitialized() {
         return loginInitialized;
     }
@@ -526,7 +556,10 @@ class BrowserSettings extends Observable {
     /* package */ void clearFormData(Context context) {
         WebViewDatabase.getInstance(context).clearFormData();
         if (mTabControl != null) {
-            mTabControl.getCurrentTopWebView().clearFormData();
+            WebView currentTopView = mTabControl.getCurrentTopWebView();
+            if (currentTopView != null) {
+                currentTopView.clearFormData();
+            }
         }
     }
 
